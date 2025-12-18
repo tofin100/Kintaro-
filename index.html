@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>PhysioNote • Voice UI Test (Pro)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --border: #d1d5db;
+      --border-strong: #9ca3af;
+      --accent: #06b6d4;
+      --accent-soft: rgba(6, 182, 212, 0.10);
+      --accent-dark: #0f172a;
+      --text: #111827;
+      --muted: #6b7280;
+      --danger: #b91c1c;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --shadow2: 0 20px 60px rgba(15, 23, 42, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app-shell {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 24px 16px 44px;
+    }
+
+    .card {
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+    }
+    .card + .card { margin-top: 16px; }
+
+    /* HERO */
+    .hero-card { text-align: center; position: relative; overflow: hidden; }
+    .hero-card::before{
+      content:"";
+      position:absolute; inset:-45%;
+      background:
+        radial-gradient(circle at top, rgba(15,118,190,0.14), transparent 55%),
+        radial-gradient(circle at 20% 30%, rgba(6,182,212,0.16), transparent 50%);
+      pointer-events:none;
+    }
+    .hero-inner { position: relative; z-index: 1; display:flex; flex-direction:column; align-items:center; gap:10px; }
+    .pill{
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius:999px; padding:3px 10px; font-size:11px;
+      letter-spacing:.07em; text-transform:uppercase;
+      border:1px solid rgba(6,182,212,.6);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .hero-title{
+      font-size: 32px; font-weight: 850;
+      letter-spacing: -0.05em;
+      color: var(--accent-dark);
+      margin: 0;
+    }
+    .hero-title span{
+      background: linear-gradient(to right, #0f172a, #0284c7);
+      -webkit-background-clip:text; background-clip:text;
+      color: transparent;
+    }
+    .hero-sub{ font-size:14px; color: var(--muted); max-width: 760px; margin: 0; }
+    .meta{ font-size:12px; color: var(--muted); }
+
+    /* Mic HUD */
+    .mic-hud{
+      position:absolute; right: 18px; top: 16px;
+      display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+      z-index: 2;
+      user-select:none;
+    }
+    .mic-indicator{
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.06);
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(107,114,128,.35);
+    }
+    .mic-indicator.active { border-color: rgba(34,197,94,.35); }
+    .mic-indicator.active .dot{ background: var(--ok); box-shadow: 0 0 0 4px rgba(34,197,94,.12); }
+    .mic-indicator.error { border-color: rgba(239,68,68,.35); }
+    .mic-indicator.error .dot{ background: var(--danger); box-shadow: 0 0 0 4px rgba(239,68,68,.12); }
+
+    .hudline{
+      font-size: 11px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border: 1px solid rgba(15,23,42,0.08);
+      background: rgba(255,255,255,0.70);
+      border-radius: 999px;
+      max-width: 320px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Form */
+    h3{ margin:0; }
+    .section-title{
+      font-size:14px; font-weight: 800;
+      margin-bottom: 10px; color: var(--accent-dark);
+    }
+
+    label{
+      font-size: 12px; color: var(--muted);
+      display:block; margin-bottom: 5px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+    }
+    input:focus, textarea:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(6,182,212,.20);
+      background: #ffffff;
+    }
+    textarea{ resize: vertical; line-height:1.45; min-height: 120px; }
+
+    .grid {
+      display:grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .mic-hud{ position: static; align-items: center; margin-top: 10px; }
+      .hero-card{ text-align:left; }
+      .hero-inner{ align-items:flex-start; }
+    }
+
+    /* Buttons */
+    .button{
+      border-radius: 999px;
+      border: none;
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; gap: 8px;
+      transition: all .15s ease-out;
+      user-select:none;
+    }
+    .button-primary{
+      background: var(--accent);
+      color: #ecfeff;
+      box-shadow: 0 10px 26px rgba(6,182,212,.30);
+    }
+    .button-primary:hover{ filter:brightness(1.03); transform: translateY(-1px); }
+    .button-ghost{
+      background: #f9fafb;
+      color: var(--accent-dark);
+      border:1px solid var(--border);
+    }
+    .button-ghost:hover{ background:#fff; }
+    .button-danger{
+      background:#fee2e2;
+      color: var(--danger);
+      border:1px solid #fecaca;
+    }
+    .button-warn{
+      background: rgba(245,158,11,.12);
+      color: #92400e;
+      border: 1px solid rgba(245,158,11,.35);
+    }
+    .button-small{ padding: 7px 12px; font-size: 12px; }
+
+    .row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
+    .row-left{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .stack{ display:flex; flex-direction:column; gap:8px; }
+
+    /* Status / Console */
+    .console {
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,0.10);
+      background: linear-gradient(180deg, #fbfdff, #f9fafb);
+      padding: 12px;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.04);
+    }
+    .console h4{
+      margin:0 0 8px;
+      font-size: 12px;
+      color: var(--accent-dark);
+      letter-spacing: .02em;
+    }
+    .line {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border: 1px dashed rgba(15,23,42,0.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.70);
+      line-height: 1.35;
+      margin-top: 8px;
+      word-break: break-word;
+    }
+    .kv {
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .k { color: #334155; font-weight: 700; }
+    .v { color: #475569; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+    /* Focus ring */
+    .focus-ring{
+      outline: 2px solid rgba(6,182,212,.95) !important;
+      box-shadow: 0 0 0 4px rgba(6,182,212,.14) !important;
+      background: #fff !important;
+    }
+
+    /* Tabs */
+    .tab-buttons{
+      display:flex; flex-wrap:wrap; gap:6px;
+      margin-bottom: 10px;
+    }
+    .tab-label{
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      color: var(--muted);
+      user-select: none;
+      font-weight: 750;
+    }
+    .tab-label.active{
+      background: var(--accent);
+      color: #ecfeff;
+      border-color: var(--accent);
+      box-shadow: 0 8px 20px rgba(6,182,212,.30);
+    }
+    .tab-panels{
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      padding: 12px 14px;
+    }
+    .tab-panel{ display:none; }
+    .tab-panel.active{ display:block; }
+
+    /* Footer */
+    .footer-note{
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Help block */
+    .help {
+      border-radius: 16px;
+      border: 1px solid rgba(6,182,212,.25);
+      background: rgba(6,182,212,.06);
+      padding: 12px;
+    }
+    .help b { color: var(--accent-dark); }
+    .help ul{ margin: 8px 0 0 18px; padding:0; color: #475569; font-size: 12px; line-height:1.45; }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 5px 10px; border-radius:999px;
+      font-size: 11px;
+      border: 1px solid rgba(15,23,42,0.10);
+      background: rgba(255,255,255,0.70);
+      color: #475569;
+      margin: 2px 6px 2px 0;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <!-- HERO -->
+    <div class="card hero-card">
+      <div class="hero-inner">
+        <div class="pill">Voice Test • Pro</div>
+        <h1 class="hero-title"><span>PhysioNote</span> – Sprachsteuerung MVP</h1>
+        <p class="hero-sub">
+          Testprojekt: komplette Oberfläche per Sprache steuern (Felder fokussieren, Werte setzen, Tabs wechseln, Diktat, Aktionen).
+          Ziel: prüfen, ob euer „Mikro am Pulli“-Workflow in der Praxis flüssig ist.
+        </p>
+        <p class="meta">
+          Start: Klick <span class="mono">Listening starten</span> (oder <span class="mono">Space</span>).
+          Dann z. B. <span class="mono">„Name: Max Mustermann“</span>, <span class="mono">„Geburtsdatum: 20.12.1996“</span>, <span class="mono">„Patient anlegen“</span>.
+        </p>
+      </div>
+
+      <div class="mic-hud">
+        <div id="micBox" class="mic-indicator">
+          <span class="dot" id="micDot"></span>
+          <span id="micText">Mikrofon bereit</span>
+        </div>
+        <div class="hudline" id="hudHeard">Gehört: –</div>
+        <div class="hudline" id="hudAction">Aktion: –</div>
+      </div>
+    </div>
+
+    <!-- PATIENT + COMMANDS -->
+    <div class="card">
+      <div class="row" style="margin-bottom: 10px;">
+        <div>
+          <h3 class="section-title">Patient (Voice-first)</h3>
+          <div class="meta">Tipp: Sag am stabilsten <span class="mono">„Feld: Wert“</span>. Du kannst auch erst <span class="mono">„Name“</span> sagen und danach den Wert.</div>
+        </div>
+
+        <div class="row-left">
+          <button id="btnStart" class="button button-primary" type="button">🎙️ Listening starten</button>
+          <button id="btnStop" class="button button-ghost" type="button">Stop</button>
+          <button id="btnPTT" class="button button-warn button-small" type="button">🎧 Push-to-talk: AUS</button>
+          <button id="btnReset" class="button button-danger" type="button">Reset</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="stack">
+          <div>
+            <label for="patient-name">Name *</label>
+            <input id="patient-name" type="text" placeholder="Max Mustermann" autocomplete="off" />
+          </div>
+
+          <div class="row" style="gap:10px;">
+            <div style="flex: 1;">
+              <label for="patient-birthdate">Geburtsdatum</label>
+              <input id="patient-birthdate" type="text" placeholder="20.12.1996" autocomplete="off" />
+            </div>
+            <div style="flex: 1;">
+              <label for="patient-id">Interne ID (optional)</label>
+              <input id="patient-id" type="text" placeholder="z. B. EXT-12345" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="row" style="gap:10px;">
+            <div style="flex: 1;">
+              <label for="patient-phone">Telefon (optional)</label>
+              <input id="patient-phone" type="text" placeholder="+41 79 123 45 67" autocomplete="off" />
+            </div>
+            <div style="flex: 1;">
+              <label for="patient-email">E-Mail (optional)</label>
+              <input id="patient-email" type="text" placeholder="max@example.com" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top: 4px;">
+            <div class="meta" id="activeFieldLabel">Aktives Feld: –</div>
+            <div class="row-left">
+              <button id="btnCreate" class="button button-primary" type="button">+ Patient anlegen</button>
+              <button id="btnClearField" class="button button-ghost" type="button">🧹 Feld löschen</button>
+            </div>
+          </div>
+
+          <div class="help">
+            <b>Schnellbefehle</b>
+            <div style="margin-top:8px;">
+              <span class="badge"><span class="mono">Listening starten</span></span>
+              <span class="badge"><span class="mono">Listening stoppen</span></span>
+              <span class="badge"><span class="mono">Nächstes Feld</span></span>
+              <span class="badge"><span class="mono">Zurück</span></span>
+              <span class="badge"><span class="mono">Feld löschen</span></span>
+              <span class="badge"><span class="mono">Patient anlegen</span></span>
+            </div>
+            <ul>
+              <li><span class="mono">Name: …</span> · <span class="mono">Geburtsdatum: …</span> · <span class="mono">Telefon: …</span> · <span class="mono">Email: …</span></li>
+              <li><span class="mono">Setze Name auf Max Mustermann</span> (geht auch)</li>
+              <li><span class="mono">Korrigiere Name: Max Muster</span> (überschreibt)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="console">
+          <h4>Voice-Konsole</h4>
+          <div class="kv">
+            <div class="k">Mode</div><div class="v" id="kvMode">Listening AUS</div>
+            <div class="k">Push-to-talk</div><div class="v" id="kvPTT">AUS</div>
+            <div class="k">Diktat</div><div class="v" id="kvDictation">AUS</div>
+            <div class="k">Fokus</div><div class="v" id="kvFocus">–</div>
+            <div class="k">Letzter Raw</div><div class="v mono" id="kvRaw">–</div>
+            <div class="k">Interpretation</div><div class="v mono" id="kvInterp">–</div>
+          </div>
+          <div class="line" id="consoleStatus">Status: bereit.</div>
+          <div class="footer-note">
+            Empfehlung: Chrome Desktop. Shortcut: <span class="mono">Space</span> Mic Toggle · <span class="mono">Esc</span> Fokus aus + Diktat aus
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSION / TABS -->
+    <div class="card">
+      <h3 class="section-title">Sitzung (Tabs + Diktat per Sprache)</h3>
+
+      <div class="tab-buttons" id="tabButtons">
+        <button type="button" class="tab-label active" data-tab="anamnese">Anamnese</button>
+        <button type="button" class="tab-label" data-tab="befund">Befund</button>
+        <button type="button" class="tab-label" data-tab="diagnose">Diagnose</button>
+        <button type="button" class="tab-label" data-tab="therapieplan">Therapieplan</button>
+        <button type="button" class="tab-label" data-tab="zusammenfassung">Zusammenfassung</button>
+      </div>
+
+      <div class="tab-panels" id="tabPanels">
+        <div class="tab-panel active" data-panel="anamnese">
+          <label for="t-anamnese">Anamnese</label>
+          <textarea id="t-anamnese" placeholder="Voice: „Öffne Anamnese“ → „Diktieren starten“ → sprechen → „Diktieren stoppen“"></textarea>
+        </div>
+        <div class="tab-panel" data-panel="befund">
+          <label for="t-befund">Befund</label>
+          <textarea id="t-befund" placeholder="Voice: „Öffne Befund“ → „Diktieren starten“…"></textarea>
+        </div>
+        <div class="tab-panel" data-panel="diagnose">
+          <label for="t-diagnose">Diagnose</label>
+          <textarea id="t-diagnose" placeholder="Voice: „Öffne Diagnose“ → „Diktieren starten“…"></textarea>
+        </div>
+        <div class="tab-panel" data-panel="therapieplan">
+          <label for="t-therapieplan">Therapieplan</label>
+          <textarea id="t-therapieplan" placeholder="Voice: „Öffne Therapieplan“ → „Diktieren starten“…"></textarea>
+        </div>
+        <div class="tab-panel" data-panel="zusammenfassung">
+          <label for="t-summary">Zusammenfassung</label>
+          <textarea id="t-summary" placeholder="Voice: „Zusammenfassung: …“ oder Diktat in diesem Tab"></textarea>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 12px;">
+        <div class="meta">
+          Voice-Aktionen: <span class="mono">„Speichern“</span>, <span class="mono">„Kopieren“</span>, <span class="mono">„Feld löschen“</span>.
+        </div>
+        <div class="row-left">
+          <button id="btnSave" class="button button-primary" type="button">💾 Speichern</button>
+          <button id="btnCopy" class="button button-ghost" type="button">📋 Kopieren</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* =========================================================
+   PhysioNote Voice UI Test (Pro)
+   - Deterministic command parsing + dictation mode
+   - No ICD, no backend, no expanding lists
+   ========================================================= */
+(function(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  // --- Elements
+  const micBox = document.getElementById("micBox");
+  const micText = document.getElementById("micText");
+  const hudHeard = document.getElementById("hudHeard");
+  const hudAction = document.getElementById("hudAction");
+
+  const kvMode = document.getElementById("kvMode");
+  const kvPTT = document.getElementById("kvPTT");
+  const kvDictation = document.getElementById("kvDictation");
+  const kvFocus = document.getElementById("kvFocus");
+  const kvRaw = document.getElementById("kvRaw");
+  const kvInterp = document.getElementById("kvInterp");
+  const consoleStatus = document.getElementById("consoleStatus");
+
+  const activeFieldLabel = document.getElementById("activeFieldLabel");
+
+  const btnStart = document.getElementById("btnStart");
+  const btnStop = document.getElementById("btnStop");
+  const btnReset = document.getElementById("btnReset");
+  const btnPTT = document.getElementById("btnPTT");
+  const btnCreate = document.getElementById("btnCreate");
+  const btnClearField = document.getElementById("btnClearField");
+  const btnSave = document.getElementById("btnSave");
+  const btnCopy = document.getElementById("btnCopy");
+
+  // Fields
+  const FIELDS = [
+    { key:"name", label:"Name", el: document.getElementById("patient-name"),
+      synonyms:["name","patient","patientname","patientenname"] },
+    { key:"birthdate", label:"Geburtsdatum", el: document.getElementById("patient-birthdate"),
+      synonyms:["geburtsdatum","geburtstag","geb datum","geburt"] },
+    { key:"id", label:"Interne ID", el: document.getElementById("patient-id"),
+      synonyms:["id","interne id","patient id","externe id","fall id","case id"] },
+    { key:"phone", label:"Telefon", el: document.getElementById("patient-phone"),
+      synonyms:["telefon","handy","nummer","tel","telefonnummer"] },
+    { key:"email", label:"E-Mail", el: document.getElementById("patient-email"),
+      synonyms:["email","e mail","mail","e-mail"] },
+
+    // Textareas as "fields"
+    { key:"anamnese", label:"Anamnese", el: document.getElementById("t-anamnese"),
+      synonyms:["anamnese"] },
+    { key:"befund", label:"Befund", el: document.getElementById("t-befund"),
+      synonyms:["befund","status"] },
+    { key:"diagnose", label:"Diagnose", el: document.getElementById("t-diagnose"),
+      synonyms:["diagnose","einschaetzung","einschätzung"] },
+    { key:"therapieplan", label:"Therapieplan", el: document.getElementById("t-therapieplan"),
+      synonyms:["therapieplan","therapie plan","plan"] },
+    { key:"zusammenfassung", label:"Zusammenfassung", el: document.getElementById("t-summary"),
+      synonyms:["zusammenfassung","summary","gesamt"] },
+  ];
+
+  const TAB_KEYS = ["anamnese","befund","diagnose","therapieplan","zusammenfassung"];
+
+  const tabButtons = [...document.querySelectorAll(".tab-label")];
+  const tabPanels  = [...document.querySelectorAll(".tab-panel")];
+
+  // --- State
+  let recognition = null;
+  let listening = false;
+  let dictation = false;
+  let pushToTalk = false;
+  let focusEl = null;
+  let focusKey = "";
+  let lastRaw = "";
+  let lastInterp = "";
+
+  // --- UI helpers
+  function setHUD(heard, action){
+    hudHeard.textContent = "Gehört: " + (heard || "–");
+    hudAction.textContent = "Aktion: " + (action || "–");
+  }
+
+  function setConsole(status){
+    consoleStatus.textContent = "Status: " + status;
+  }
+
+  function setModeUI(){
+    kvMode.textContent = listening ? "Listening AN" : "Listening AUS";
+    kvPTT.textContent = pushToTalk ? "AN (halte Space)" : "AUS";
+    kvDictation.textContent = dictation ? "AN" : "AUS";
+    kvFocus.textContent = focusKey ? focusKey : "–";
+    kvRaw.textContent = lastRaw || "–";
+    kvInterp.textContent = lastInterp || "–";
+
+    activeFieldLabel.textContent = "Aktives Feld: " + (focusKey ? focusKey : "–");
+
+    micBox.classList.remove("active","error");
+    if(listening){
+      micBox.classList.add("active");
+      micText.textContent = "Mikro aktiv";
+    } else {
+      micText.textContent = "Mikrofon bereit";
+    }
+
+    btnPTT.textContent = pushToTalk ? "🎧 Push-to-talk: AN (halte Space)" : "🎧 Push-to-talk: AUS";
+  }
+
+  function clearFocusRing(){
+    document.querySelectorAll(".focus-ring").forEach(el => el.classList.remove("focus-ring"));
+  }
+
+  function focusByKey(key){
+    const f = FIELDS.find(x => x.key === key);
+    if(!f) return false;
+    clearFocusRing();
+    focusEl = f.el;
+    focusKey = f.label;
+    focusEl.classList.add("focus-ring");
+    try { focusEl.focus({preventScroll:false}); } catch(e){}
+    setModeUI();
+    return true;
+  }
+
+  function openTab(tabKey){
+    const btn = tabButtons.find(b => b.getAttribute("data-tab") === tabKey);
+    if(btn) btn.click();
+
+    // set active panel
+    tabButtons.forEach(b => b.classList.remove("active"));
+    tabPanels.forEach(p => p.classList.remove("active"));
+    btn?.classList.add("active");
+    document.querySelector(`.tab-panel[data-panel="${tabKey}"]`)?.classList.add("active");
+
+    // focus textarea for tab
+    focusByKey(tabKey);
+  }
+
+  // initialize tab clicks (so UI always consistent)
+  tabButtons.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.getAttribute("data-tab");
+      openTab(k);
+    });
+  });
+
+  function resetAll(){
+    FIELDS.forEach(f => { if(f.el) f.el.value = ""; });
+    clearFocusRing();
+    focusEl = null;
+    focusKey = "";
+    dictation = false;
+    setConsole("Zurückgesetzt.");
+    setHUD("–","Reset");
+    lastInterp = "reset()";
+    lastRaw = "";
+    setModeUI();
+  }
+
+  function clearFocusedField(){
+    if(!focusEl){
+      setConsole("Kein Fokus. Sag z.B. „Name“.");
+      setHUD(lastRaw, "Kein Fokus zum Löschen");
+      return;
+    }
+    focusEl.value = "";
+    focusEl.dispatchEvent(new Event("input"));
+    setConsole("Feld gelöscht: " + focusKey);
+    setHUD(lastRaw, "Feld gelöscht");
+  }
+
+  // --- Normalization / Parsing
+  function normalize(s){
+    return (s||"")
+      .toLowerCase()
+      .replace(/[ä]/g,"ae").replace(/[ö]/g,"oe").replace(/[ü]/g,"ue").replace(/ß/g,"ss")
+      .replace(/[^\p{L}\p{N}\s:.\-+@/]/gu, " ")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  function stripWakewords(t){
+    // optional wakewords; keep light
+    return t
+      .replace(/^kintaro\s+/,"")
+      .replace(/^physionote\s+/,"")
+      .trim();
+  }
+
+  const MONTHS = {
+    januar:1, jan:1,
+    februar:2, feb:2,
+    maerz:3, märz:3,
+    april:4, apr:4,
+    mai:5,
+    juni:6, jun:6,
+    juli:7, jul:7,
+    august:8, aug:8,
+    september:9, sep:9,
+    oktober:10, okt:10,
+    november:11, nov:11,
+    dezember:12, dez:12
+  };
+
+  function pad2(n){ return String(n).padStart(2,"0"); }
+
+  function tryNormalizeDate(val){
+    // Accept: 20.12.1996 | 20/12/1996 | 20-12-1996
+    let v = (val||"").trim();
+    const m1 = v.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{2,4})$/);
+    if(m1){
+      let d = parseInt(m1[1],10);
+      let m = parseInt(m1[2],10);
+      let y = parseInt(m1[3],10);
+      if(y < 100) y = 1900 + y;
+      if(d>=1 && d<=31 && m>=1 && m<=12 && y>=1900 && y<=2100){
+        return `${pad2(d)}.${pad2(m)}.${y}`;
+      }
+    }
+
+    // Accept: 20. Dezember 1996 | 20 Dezember 1996
+    const m2 = normalize(v).match(/^(\d{1,2})\s*\.?\s*([a-zäöü]+)\s+(\d{4})$/i);
+    if(m2){
+      const d = parseInt(m2[1],10);
+      const monName = m2[2].toLowerCase();
+      const y = parseInt(m2[3],10);
+      const m = MONTHS[monName];
+      if(m && d>=1 && d<=31 && y>=1900 && y<=2100){
+        return `${pad2(d)}.${pad2(m)}.${y}`;
+      }
+    }
+
+    // If they say just year (for quick tests)
+    const yOnly = v.match(/^\d{4}$/);
+    if(yOnly) return v;
+
+    return null;
+  }
+
+  function getFieldKeyFromHead(head){
+    const h = normalize(head);
+    for(const f of FIELDS){
+      for(const syn of f.synonyms){
+        if(h === normalize(syn)) return f.key;
+      }
+    }
+    return "";
+  }
+
+  function applyValueToField(key, value, mode){
+    // mode: "set" (replace) or "append"
+    const f = FIELDS.find(x => x.key === key);
+    if(!f) return false;
+
+    // open tab if textarea field
+    if(TAB_KEYS.includes(key)) openTab(key);
+    else focusByKey(key);
+
+    let finalVal = value;
+
+    // normalize birthdate
+    if(key === "birthdate"){
+      const normDate = tryNormalizeDate(value);
+      if(normDate) finalVal = normDate;
+    }
+
+    // trim for email
+    if(key === "email"){
+      finalVal = finalVal.replace(/\s+/g,"").trim();
+    }
+
+    // phone: keep + and digits/spaces
+    if(key === "phone"){
+      finalVal = value.replace(/[^\d+\s]/g,"").replace(/\s+/g," ").trim();
+    }
+
+    if(mode === "append"){
+      f.el.value = (f.el.value ? f.el.value + " " : "") + finalVal;
+    } else {
+      f.el.value = finalVal;
+    }
+    f.el.dispatchEvent(new Event("input"));
+
+    setConsole(`Gesetzt: ${f.label} = ${finalVal}`);
+    setHUD(lastRaw, `Setze ${f.label}`);
+    lastInterp = `set(${key},"${finalVal}")`;
+    setModeUI();
+    return true;
+  }
+
+  // --- Action handlers
+  function createPatient(){
+    const name = (document.getElementById("patient-name").value||"").trim();
+    if(!name){
+      setConsole("Name fehlt. Sag: „Name: …“");
+      setHUD(lastRaw, "Fehler: Name fehlt");
+      focusByKey("name");
+      return;
+    }
+    setConsole(`Patient angelegt (Test): ${name}`);
+    setHUD(lastRaw, "Patient angelegt (Test)");
+    lastInterp = "create_patient()";
+    setModeUI();
+  }
+
+  function save(){
+    setConsole("Gespeichert (Test).");
+    setHUD(lastRaw, "Speichern");
+    lastInterp = "save()";
+    setModeUI();
+  }
+
+  async function copyAll(){
+    const payload = [
+      `Name: ${(document.getElementById("patient-name").value||"-")}`,
+      `Geburtsdatum: ${(document.getElementById("patient-birthdate").value||"-")}`,
+      `Interne ID: ${(document.getElementById("patient-id").value||"-")}`,
+      `Telefon: ${(document.getElementById("patient-phone").value||"-")}`,
+      `Email: ${(document.getElementById("patient-email").value||"-")}`,
+      "",
+      "ANAMNESE:",
+      document.getElementById("t-anamnese").value || "",
+      "",
+      "BEFUND:",
+      document.getElementById("t-befund").value || "",
+      "",
+      "DIAGNOSE:",
+      document.getElementById("t-diagnose").value || "",
+      "",
+      "THERAPIEPLAN:",
+      document.getElementById("t-therapieplan").value || "",
+      "",
+      "ZUSAMMENFASSUNG:",
+      document.getElementById("t-summary").value || ""
+    ].join("\n");
+
+    try{
+      await navigator.clipboard.writeText(payload);
+      setConsole("In Zwischenablage kopiert.");
+      setHUD(lastRaw, "Kopieren");
+      lastInterp = "copy()";
+    }catch(e){
+      setConsole("Kopieren nicht möglich (Berechtigung).");
+      setHUD(lastRaw, "Kopieren fehlgeschlagen");
+      lastInterp = "copy_failed()";
+    }
+    setModeUI();
+  }
+
+  // --- Speech engine
+  function buildRecognition(){
+    if(!SR){
+      micBox.classList.add("error");
+      micText.textContent = "Speech API fehlt";
+      setConsole("Browser unterstützt SpeechRecognition nicht. Nutze Chrome (Desktop/Android).");
+      setHUD("–","Nicht unterstützt");
+      setModeUI();
+      return null;
+    }
+    const r = new SR();
+    r.lang = "de-DE";
+    r.continuous = true;
+    r.interimResults = false;
+    return r;
+  }
+
+  function startListening(){
+    if(listening) return;
+    recognition = buildRecognition();
+    if(!recognition) return;
+
+    recognition.onstart = ()=>{
+      listening = true;
+      micBox.classList.remove("error");
+      setConsole("Listening aktiv. Sag z.B. „Name: Max Mustermann“ oder „Öffne Befund“.");
+      setHUD("–","Listening an");
+      lastInterp = "listening_on()";
+      setModeUI();
+    };
+
+    recognition.onerror = (e)=>{
+      micBox.classList.add("error");
+      setConsole(`Mikro Fehler: ${e.error || "unknown"}`);
+      setHUD(lastRaw, "Speech error");
+      lastInterp = `error(${e.error||"unknown"})`;
+      setModeUI();
+    };
+
+    recognition.onend = ()=>{
+      // In some browsers it stops; auto-restart only if listening and NOT in push-to-talk mode
+      if(listening && !pushToTalk){
+        try { recognition.start(); } catch(e){}
+      } else {
+        // Keep UI consistent
+        setModeUI();
+      }
+    };
+
+    recognition.onresult = (ev)=>{
+      const raw = ev.results[ev.results.length-1][0].transcript || "";
+      lastRaw = raw.trim();
+      kvRaw.textContent = lastRaw || "–";
+      setHUD(lastRaw, "…");
+
+      const t0 = stripWakewords(normalize(raw));
+
+      // === 1) Global commands
+      if(t0.includes("listening stoppen") || t0 === "stop" || t0.includes("mikro aus") || t0.includes("mikrofon aus")){
+        stopListening();
+        return;
+      }
+      if(t0.includes("listening starten") || t0.includes("mikro an") || t0.includes("mikrofon an")){
+        // already listening
+        setConsole("Listening läuft bereits.");
+        setHUD(lastRaw, "Listening läuft");
+        lastInterp = "listening_already_on()";
+        setModeUI();
+        return;
+      }
+      if(t0 === "reset" || t0.includes("alles loeschen") || t0.includes("alles löschen") || t0.includes("reset felder")){
+        resetAll();
+        return;
+      }
+      if(t0.includes("fokus aus") || t0.includes("fokus entfernen")){
+        clearFocusRing();
+        focusEl = null; focusKey = "";
+        dictation = false;
+        setConsole("Fokus entfernt. Diktat AUS.");
+        setHUD(lastRaw, "Fokus aus");
+        lastInterp = "focus_off()";
+        setModeUI();
+        return;
+      }
+
+      // === 2) Dictation commands
+      if(t0.includes("diktieren starten") || t0.includes("diktat starten") || t0.includes("aufnahme starten")){
+        dictation = true;
+        // if no focus, use active tab
+        const activeTab = document.querySelector(".tab-label.active")?.getAttribute("data-tab");
+        if(!focusEl && activeTab) focusByKey(activeTab);
+        setConsole("Diktatmodus AN.");
+        setHUD(lastRaw, "Diktat an");
+        lastInterp = "dictation_on()";
+        setModeUI();
+        return;
+      }
+      if(t0.includes("diktieren stoppen") || t0.includes("diktat stoppen") || t0.includes("aufnahme stoppen")){
+        dictation = false;
+        setConsole("Diktatmodus AUS.");
+        setHUD(lastRaw, "Diktat aus");
+        lastInterp = "dictation_off()";
+        setModeUI();
+        return;
+      }
+
+      // === 3) Tab navigation
+      // Support: "öffne befund", "wechsel zu befund"
+      for(const tab of TAB_KEYS){
+        if(t0.includes("oeffne "+tab) || t0.includes("öffne "+tab) || t0.includes("wechsel zu "+tab) || t0.includes("wechsle zu "+tab)){
+          openTab(tab);
+          setConsole("Tab geöffnet: " + tab);
+          setHUD(lastRaw, "Tab: " + tab);
+          lastInterp = `open_tab(${tab})`;
+          setModeUI();
+          return;
+        }
+      }
+      // common: "öffne therapie plan"
+      if(t0.includes("oeffne therapie plan") || t0.includes("öffne therapie plan")){
+        openTab("therapieplan");
+        setConsole("Tab geöffnet: therapieplan");
+        setHUD(lastRaw, "Tab: therapieplan");
+        lastInterp = "open_tab(therapieplan)";
+        setModeUI();
+        return;
+      }
+
+      // === 4) Actions
+      if(t0.includes("patient anlegen") || t0.includes("patient erstellen") || t0.includes("anlegen")){
+        createPatient(); return;
+      }
+      if(t0 === "speichern" || t0.includes("sitzung speichern")){
+        save(); return;
+      }
+      if(t0.includes("kopieren") || t0.includes("zwischenablage")){
+        copyAll(); return;
+      }
+      if(t0.includes("feld loeschen") || t0.includes("feld löschen") || t0.includes("loesche feld") || t0.includes("lösche feld")){
+        clearFocusedField(); return;
+      }
+
+      // next/prev field (patient fields only for test)
+      if(t0.includes("naechstes feld") || t0.includes("nächstes feld")){
+        const order = ["name","birthdate","id","phone","email"];
+        const idx = order.indexOf(FIELDS.find(f=>f.el===focusEl)?.key || "");
+        const nextKey = order[Math.min(order.length-1, Math.max(0, idx+1))] || "name";
+        focusByKey(nextKey);
+        setConsole("Fokus: " + (FIELDS.find(f=>f.key===nextKey)?.label || nextKey));
+        setHUD(lastRaw, "Nächstes Feld");
+        lastInterp = "next_field()";
+        setModeUI();
+        return;
+      }
+      if(t0.includes("zurueck") || t0.includes("zurück") || t0.includes("vorheriges feld")){
+        const order = ["name","birthdate","id","phone","email"];
+        const idx = order.indexOf(FIELDS.find(f=>f.el===focusEl)?.key || "");
+        const prevKey = order[Math.max(0, idx-1)] || "name";
+        focusByKey(prevKey);
+        setConsole("Fokus: " + (FIELDS.find(f=>f.key===prevKey)?.label || prevKey));
+        setHUD(lastRaw, "Vorheriges Feld");
+        lastInterp = "prev_field()";
+        setModeUI();
+        return;
+      }
+
+      // === 5) Field setting (robust patterns)
+      // Patterns:
+      //  - "name: max mustermann"
+      //  - "setze name auf max"
+      //  - "korrigiere geburtsdatum: 20.12.1996"
+      //  - "name" (focus) then "max mustermann" (set focused input)
+      const t = t0;
+
+      // A) "setze X auf Y" / "korrigiere X auf Y"
+      let m = t.match(/^(setze|korrigiere)\s+(.+?)\s+(auf|zu)\s+(.+)$/);
+      if(m){
+        const head = m[2].trim();
+        const value = m[4].trim();
+        const key = getFieldKeyFromHead(head);
+        if(key){
+          applyValueToField(key, value, "set");
+          return;
+        }
+      }
+
+      // B) "X: Y"
+      m = t.match(/^(.+?)\s*:\s*(.+)$/);
+      if(m){
+        const head = m[1].trim();
+        const value = m[2].trim();
+        const key = getFieldKeyFromHead(head);
+        if(key){
+          applyValueToField(key, value, "set");
+          return;
+        }
+      }
+
+      // C) "X Y" for short inputs (head = first token OR known head phrases)
+      // Try to match longest synonym at start
+      const synCandidates = FIELDS
+        .flatMap(f => f.synonyms.map(s => ({key:f.key, syn: normalize(s)})))
+        .sort((a,b)=> b.syn.length - a.syn.length);
+
+      for(const c of synCandidates){
+        if(t.startsWith(c.syn + " ")){
+          const value = t.slice(c.syn.length).trim();
+          if(value){
+            applyValueToField(c.key, value, "set");
+            return;
+          } else {
+            // focus only
+            if(TAB_KEYS.includes(c.key)) openTab(c.key);
+            else focusByKey(c.key);
+            setConsole("Fokus: " + (FIELDS.find(f=>f.key===c.key)?.label || c.key));
+            setHUD(lastRaw, "Fokus gesetzt");
+            lastInterp = `focus(${c.key})`;
+            setModeUI();
+            return;
+          }
+        }
+        if(t === c.syn){
+          if(TAB_KEYS.includes(c.key)) openTab(c.key);
+          else focusByKey(c.key);
+          setConsole("Fokus: " + (FIELDS.find(f=>f.key===c.key)?.label || c.key));
+          setHUD(lastRaw, "Fokus gesetzt");
+          lastInterp = `focus(${c.key})`;
+          setModeUI();
+          return;
+        }
+      }
+
+      // === 6) Free dictation into focused element
+      if(dictation && focusEl){
+        focusEl.value = (focusEl.value ? focusEl.value + " " : "") + lastRaw;
+        focusEl.dispatchEvent(new Event("input"));
+        setConsole("Diktiert…");
+        setHUD(lastRaw, "Diktat → " + (focusKey || "Feld"));
+        lastInterp = "dictate_append()";
+        setModeUI();
+        return;
+      }
+
+      // === 7) If not dictating: if focused INPUT, set it with the utterance
+      if(!dictation && focusEl && focusEl.tagName === "INPUT"){
+        focusEl.value = lastRaw.trim();
+        focusEl.dispatchEvent(new Event("input"));
+        setConsole("Wert ins fokussierte Feld gesetzt.");
+        setHUD(lastRaw, "Set focused input");
+        lastInterp = "set_focused_input()";
+        setModeUI();
+        return;
+      }
+
+      setConsole(`Unklar: „${lastRaw}“. Tipp: „Feld: Wert“ oder „Diktieren starten“.`);
+      setHUD(lastRaw, "Unklar");
+      lastInterp = "unhandled()";
+      setModeUI();
+    };
+
+    try { recognition.start(); } catch(e){}
+  }
+
+  function stopListening(){
+    listening = false;
+    dictation = false;
+    try { recognition && recognition.stop(); } catch(e){}
+    setConsole("Listening gestoppt.");
+    setHUD(lastRaw, "Listening aus");
+    lastInterp = "listening_off()";
+    setModeUI();
+  }
+
+  // --- Push-to-talk mode
+  // If enabled: only listen while SPACE is held down.
+  function setPTT(on){
+    pushToTalk = on;
+    if(pushToTalk){
+      // ensure not auto-restarting
+      if(listening){
+        stopListening();
+      }
+      setConsole("Push-to-talk AN. Halte SPACE gedrückt, um zu sprechen.");
+      setHUD("–","PTT an");
+      lastInterp = "ptt_on()";
+    } else {
+      setConsole("Push-to-talk AUS. Normaler Listening-Modus.");
+      setHUD("–","PTT aus");
+      lastInterp = "ptt_off()";
+    }
+    setModeUI();
+  }
+
+  // --- Button hooks
+  btnStart.addEventListener("click", ()=> { if(!pushToTalk) startListening(); else setConsole("PTT ist AN. Halte SPACE zum Sprechen."); });
+  btnStop.addEventListener("click", stopListening);
+  btnReset.addEventListener("click", resetAll);
+  btnCreate.addEventListener("click", createPatient);
+  btnClearField.addEventListener("click", clearFocusedField);
+  btnSave.addEventListener("click", save);
+  btnCopy.addEventListener("click", copyAll);
+  btnPTT.addEventListener("click", ()=> setPTT(!pushToTalk));
+
+  // --- Keyboard shortcuts
+  document.addEventListener("keydown", (e)=>{
+    if(e.code === "Escape"){
+      clearFocusRing();
+      focusEl = null; focusKey = "";
+      dictation = false;
+      setConsole("Fokus entfernt. Diktat AUS.");
+      setHUD("–","Fokus aus");
+      lastInterp = "focus_off()";
+      setModeUI();
+    }
+
+    if(pushToTalk && e.code === "Space" && !e.repeat){
+      e.preventDefault();
+      // press to start listening
+      if(!listening) startListening();
+    }
+
+    // In normal mode, Space toggles mic
+    if(!pushToTalk && e.code === "Space" && !e.repeat){
+      e.preventDefault();
+      if(!listening) startListening();
+      else stopListening();
+    }
+  });
+
+  document.addEventListener("keyup", (e)=>{
+    if(pushToTalk && e.code === "Space"){
+      e.preventDefault();
+      // release to stop listening
+      if(listening) stopListening();
+    }
+  });
+
+  // --- Initial state
+  resetAll();
+  setModeUI();
+  setConsole("Bereit. Starte Listening und sprich: „Name: Max Mustermann“.");
+})();
+</script>
+
+</body>
+</html>
